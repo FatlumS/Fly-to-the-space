@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Game Fairness - Orbit Rush</title>
+  <style>
+    :root {
+      --bg: #0a0a2e;
+      --panel: #12123d;
+      --panel-2: #18184a;
+      --blue: #00d4ff;
+      --orange: #ff6b35;
+      --green: #3dff9a;
+      --red: #ff426d;
+      --text: #f4f7ff;
+      --muted: #9aa7d9;
+      --line: rgba(0, 212, 255, 0.22);
+      --shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 10%, rgba(0, 212, 255, 0.16), transparent 28%),
+        radial-gradient(circle at 85% 20%, rgba(255, 107, 53, 0.14), transparent 26%),
+        var(--bg);
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      margin: 0 0 10px 0;
+      font-size: 2rem;
+      color: var(--blue);
+      text-shadow: 0 0 24px rgba(0, 212, 255, 0.62);
+      letter-spacing: 1px;
+    }
+
+    .header p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin: 0;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(18, 18, 61, 0.9);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(10, 10, 46, 0.6);
+      color: var(--text);
+      font-size: 1rem;
+      font-family: 'Courier New', monospace;
+      transition: border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--blue);
+      box-shadow: 0 0 12px rgba(0, 212, 255, 0.3);
+    }
+
+    input::placeholder {
+      color: var(--muted);
+      opacity: 0.5;
+    }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    button {
+      min-height: 48px;
+      padding: 0 16px;
+      border: 0;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    button:active {
+      transform: translateY(1px) scale(0.99);
+    }
+
+    .btn-verify {
+      background: linear-gradient(135deg, var(--blue), #0099cc);
+      color: var(--bg);
+      box-shadow: 0 8px 24px rgba(0, 212, 255, 0.3);
+    }
+
+    .btn-verify:hover {
+      box-shadow: 0 12px 32px rgba(0, 212, 255, 0.4);
+    }
+
+    .btn-reset {
+      background: rgba(100, 100, 150, 0.3);
+      color: var(--muted);
+      border: 1px solid var(--line);
+    }
+
+    .btn-reset:hover {
+      background: rgba(100, 100, 150, 0.5);
+    }
+
+    .btn-back {
+      background: transparent;
+      color: var(--blue);
+      border: 1px solid var(--blue);
+      margin-bottom: 20px;
+    }
+
+    .btn-back:hover {
+      background: rgba(0, 212, 255, 0.1);
+    }
+
+    .results {
+      display: none;
+      animation: slideIn 300ms ease;
+    }
+
+    .results.show {
+      display: block;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .result-item {
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      background: rgba(30, 30, 60, 0.8);
+      border-left: 4px solid var(--blue);
+    }
+
+    .result-item.success {
+      border-left-color: var(--green);
+    }
+
+    .result-item.error {
+      border-left-color: var(--red);
+    }
+
+    .result-label {
+      font-size: 0.85rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .result-value {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+      font-family: 'Courier New', monospace;
+      word-break: break-all;
+    }
+
+    .result-status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 20px;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .result-status.verified {
+      background: rgba(61, 255, 154, 0.15);
+      color: var(--green);
+      border: 2px solid var(--green);
+    }
+
+    .result-status.not-verified {
+      background: rgba(255, 66, 109, 0.15);
+      color: var(--red);
+      border: 2px solid var(--red);
+    }
+
+    .result-status.mismatch {
+      background: rgba(255, 107, 53, 0.15);
+      color: var(--orange);
+      border: 2px solid var(--orange);
+    }
+
+    .icon {
+      font-size: 1.5rem;
+    }
+
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .comparison-item {
+      padding: 12px;
+      border-radius: 6px;
+      background: rgba(10, 10, 46, 0.6);
+      border: 1px solid var(--line);
+    }
+
+    .comparison-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .comparison-value {
+      font-size: 1.2rem;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+      word-break: break-word;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+      color: var(--muted);
+    }
+
+    .loading.show {
+      display: block;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(0, 212, 255, 0.3);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 600ms linear infinite;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .info-box {
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid var(--blue);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .info-box strong {
+      color: var(--blue);
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .footer a {
+      color: var(--blue);
+      text-decoration: none;
+      transition: color 160ms ease;
+    }
+
+    .footer a:hover {
+      color: var(--orange);
+    }
+
+    .formula-box {
+      background: rgba(10, 10, 46, 0.8);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      color: var(--blue);
+      overflow-x: auto;
+      margin: 12px 0;
+      line-height: 1.6;
+    }
+
+    .error-message {
+      background: rgba(255, 66, 109, 0.1);
+      border: 1px solid var(--red);
+      border-radius: 8px;
+      padding: 12px;
+      color: var(--red);
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .header h1 {
+        font-size: 1.5rem;
+      }
+
+      .card {
+        padding: 16px;
+      }
+
+      .comparison {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button class="btn-back" onclick="goBack()">← Back to Game</button>
+
+    <div class="header">
+      <h1>🔐 Verify Fairness</h1>
+      <p>Cryptographically verify any round's crash point</p>
+    </div>
+
+    <div class="info-box">
+      <strong>How it works:</strong> Every round is generated using your server seed, a client seed, and a nonce. 
+      You can independently verify that the crash point was calculated fairly and not manipulated.
+    </div>
+
+    <div class="card">
+      <form id="verifyForm" onsubmit="handleVerify(event)">
+        <div class="form-group">
+          <label for="roundId">Round ID</label>
+          <input 
+            type="text" 
+            id="roundId" 
+            placeholder="e.g., round-2024-001"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="serverSeed">Server Seed</label>
+          <input 
+            type="text" 
+            id="serverSeed" 
+            placeholder="Provided by the game server"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="clientSeed">Client Seed</label>
+          <input 
+            type="text" 
+            id="clientSeed" 
+            placeholder="Your client seed"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="nonce">Nonce</label>
+          <input 
+            type="number" 
+            id="nonce" 
+            placeholder="0"
+            value="0"
+            min="0"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="claimedCrashPoint">Claimed Crash Point (Optional)</label>
+          <input 
+            type="text" 
+            id="claimedCrashPoint" 
+            placeholder="e.g., 2.45 - Leave empty to skip comparison"
+          >
+        </div>
+
+        <div class="button-group">
+          <button type="submit" class="btn-verify">
+            <span>🔍 VERIFY ROUND</span>
+          </button>
+          <button type="reset" class="btn-reset">Clear Form</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="loading" id="loading">
+      <span class="spinner"></span>
+      <span>Verifying...</span>
+    </div>
+
+    <div class="results" id="results">
+      <div id="resultStatus"></div>
+      <div id="resultDetails"></div>
+      <div id="formula" style="display: none;">
+        <strong style="color: var(--blue);">Calculation Formula:</strong>
+        <div class="formula-box">
+          <div>combined = serverSeed + '-' + clientSeed + '-' + nonce</div>
+          <div>hash = SHA256(combined)</div>
+          <div>first13Hex = hash.substring(0, 13)</div>
+          <div>randomInt = parseInt(first13Hex, 16)</div>
+          <div>random = randomInt / (2^52 - 1)</div>
+          <div>crashPoint = (1 / (1 - random)) * 0.96</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>Orbit Rush provably fair system • SHA-256 verification</p>
+      <p><a href="/">← Return to Game</a></p>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * Provably Fair Verification Script
+     * Verify crash points using Web Crypto API
+     */
+
+    /**
+     * Convert hex string to integer
+     */
+    function hexToInt(hexString) {
+      return BigInt('0x' + hexString);
+    }
+
+    /**
+     * Convert ArrayBuffer to hex string
+     */
+    function arrayBufferToHexString(arrayBuffer) {
+      const byteArray = new Uint8Array(arrayBuffer);
+      let hexString = '';
+      for (let i = 0; i < byteArray.length; i++) {
+        const hex = byteArray[i].toString(16);
+        hexString += hex.length === 1 ? '0' + hex : hex;
+      }
+      return hexString;
+    }
+
+    /**
+     * Calculate crash point using SHA256
+     */
+    async function calculateCrashPoint(serverSeed, clientSeed, nonce) {
+      try {
+        // Step 1: Combine seeds
+        const combined = `${serverSeed}-${clientSeed}-${nonce}`;
+        console.log('Combined string:', combined);
+
+        // Step 2: Hash using SHA-256
+        const encoder = new TextEncoder();
+        const data = encoder.encode(combined);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashHex = arrayBufferToHexString(hashBuffer);
+        console.log('SHA-256 hash:', hashHex);
+
+        // Step 3: Take first 13 hex characters
+        const first13Hex = hashHex.substring(0, 13);
+        console.log('First 13 hex:', first13Hex);
+
+        // Step 4: Convert to integer and divide by 2^52 - 1
+        const randomInt = hexToInt(first13Hex);
+        const maxValue = BigInt('4503599627370495'); // 2^52 - 1
+        const random = Number(randomInt) / Number(maxValue);
+        console.log('Random value (0-1):', random);
+
+        // Step 5: Calculate crash point
+        // crashPoint = (1 / (1 - random)) * 0.96
+        const crashPoint = (1 / (1 - random)) * 0.96;
+        console.log('Crash point:', crashPoint);
+
+        return {
+          combined,
+          hashHex,
+          first13Hex,
+          random: random.toFixed(6),
+          crashPoint: crashPoint.toFixed(2),
+          success: true
+        };
+      } catch (error) {
+        console.error('Calculation error:', error);
+        return {
+          success: false,
+          error: error.message
+        };
+      }
+    }
+
+    /**
+     * Format result status message
+     */
+    function getStatusHTML(calculation, claimed) {
+      if (!calculation.success) {
+        return `
+          <div class="result-status not-verified">
+            <span class="icon">❌</span>
+            <span>Calculation Error: ${calculation.error}</span>
+          </div>
+        `;
+      }
+
+      if (!claimed) {
+        return `
+          <div class="result-status verified">
+            <span class="icon">✓</span>
+            <span>Crash Point Calculated: ${calculation.crashPoint}x</span>
+          </div>
+        `;
+      }
+
+      const calculatedCrash = parseFloat(calculation.crashPoint);
+      const claimedCrash = parseFloat(claimed);
+      const difference = Math.abs(calculatedCrash - claimedCrash);
+
+      if (difference < 0.01) {
+        return `
+          <div class="result-status verified">
+            <span class="icon">✅</span>
+            <span>VERIFIED - Fair Round</span>
+          </div>
+        `;
+      } else if (difference < 0.1) {
+        return `
+          <div class="result-status mismatch">
+            <span class="icon">⚠️</span>
+            <span>Minor Deviation (Δ ${difference.toFixed(4)}x)</span>
+          </div>
+        `;
+      } else {
+        return `
+          <div class="result-status not-verified">
+            <span class="icon">❌</span>
+            <span>NOT VERIFIED - Possible Tampering</span>
+          </div>
+        `;
+      }
+    }
+
+    /**
+     * Format detailed results
+     */
+    function getDetailsHTML(calculation, claimed) {
+      if (!calculation.success) {
+        return '';
+      }
+
+      let html = `
+        <div class="result-item">
+          <div class="result-label">Calculated Crash Point</div>
+          <div class="result-value">${calculation.crashPoint}x</div>
+        </div>
+
+        <div class="result-item">
+          <div class="result-label">Inputs</div>
+          <div style="font-family: 'Courier New', monospace; font-size: 0.85rem; word-break: break-all;">
+            <div>Server Seed: <strong>${document.getElementById('serverSeed').value}</strong></div>
+            <div>Client Seed: <strong>${document.getElementById('clientSeed').value}</strong></div>
+            <div>Nonce: <strong>${document.getElementById('nonce').value}</strong></div>
+          </div>
+        </div>
+
+        <div class="result-item">
+          <div class="result-label">SHA-256 Hash</div>
+          <div class="result-value" style="font-size: 1rem;">${calculation.hashHex}</div>
+        </div>
+
+        <div class="result-item">
+          <div class="result-label">Hash Processing</div>
+          <div style="font-family: 'Courier New', monospace; font-size: 0.9rem; line-height: 1.6;">
+            <div>First 13 hex: <strong>${calculation.first13Hex}</strong></div>
+            <div>Random value: <strong>${calculation.random}</strong></div>
+            <div>Formula: (1 / (1 - ${calculation.random})) × 0.96</div>
+          </div>
+        </div>
+      `;
+
+      if (claimed) {
+        const calculatedCrash = parseFloat(calculation.crashPoint);
+        const claimedCrash = parseFloat(claimed);
+        const difference = Math.abs(calculatedCrash - claimedCrash);
+        
+        html += `
+          <div class="comparison">
+            <div class="comparison-item">
+              <div class="comparison-label">Calculated</div>
+              <div class="comparison-value" style="color: var(--green);">${calculation.crashPoint}x</div>
+            </div>
+            <div class="comparison-item">
+              <div class="comparison-label">Game Claimed</div>
+              <div class="comparison-value" style="color: ${difference < 0.01 ? 'var(--green)' : 'var(--orange)'};">${claimed}</div>
+            </div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">Difference</div>
+            <div class="result-value" style="color: ${difference < 0.01 ? 'var(--green)' : 'var(--orange)'};">
+              ${difference.toFixed(4)}x
+            </div>
+          </div>
+        `;
+      }
+
+      return html;
+    }
+
+    /**
+     * Handle form submission
+     */
+    async function handleVerify(event) {
+      event.preventDefault();
+
+      const roundId = document.getElementById('roundId').value.trim();
+      const serverSeed = document.getElementById('serverSeed').value.trim();
+      const clientSeed = document.getElementById('clientSeed').value.trim();
+      const nonce = document.getElementById('nonce').value.trim();
+      const claimed = document.getElementById('claimedCrashPoint').value.trim();
+
+      // Validation
+      if (!roundId || !serverSeed || !clientSeed || nonce === '') {
+        alert('Please fill in all required fields');
+        return;
+      }
+
+      // Show loading
+      document.getElementById('loading').classList.add('show');
+      document.getElementById('results').classList.remove('show');
+
+      // Calculate
+      setTimeout(async () => {
+        const calculation = await calculateCrashPoint(serverSeed, clientSeed, nonce);
+
+        // Hide loading
+        document.getElementById('loading').classList.remove('show');
+
+        // Show results
+        document.getElementById('resultStatus').innerHTML = getStatusHTML(calculation, claimed);
+        document.getElementById('resultDetails').innerHTML = getDetailsHTML(calculation, claimed);
+        document.getElementById('formula').style.display = 'block';
+        document.getElementById('results').classList.add('show');
+
+        // Scroll to results
+        setTimeout(() => {
+          document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }, 300);
+    }
+
+    /**
+     * Navigate back to game
+     */
+    function goBack() {
+      window.location.href = '/';
+    }
+
+    /**
+     * Initialize with URL parameters if present
+     */
+    function initializeFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      const roundId = params.get('roundId');
+      const serverSeed = params.get('serverSeed');
+      const clientSeed = params.get('clientSeed');
+      const nonce = params.get('nonce');
+      const claimed = params.get('crashPoint');
+
+      if (roundId) document.getElementById('roundId').value = roundId;
+      if (serverSeed) document.getElementById('serverSeed').value = serverSeed;
+      if (clientSeed) document.getElementById('clientSeed').value = clientSeed;
+      if (nonce) document.getElementById('nonce').value = nonce;
+      if (claimed) document.getElementById('claimedCrashPoint').value = claimed;
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', initializeFromURL);
+  </script>
+</body>
+</html>
