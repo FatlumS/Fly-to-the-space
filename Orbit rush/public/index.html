@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Orbit Rush</title>
+  <link rel="stylesheet" href="/css/animations.css">
   <style>
     :root {
       --bg: #0a0a2e;
@@ -332,18 +333,7 @@
     }
 
     .primary.pulse {
-      animation: pulse-btn 0.8s ease-in-out infinite;
-    }
-
-    @keyframes pulse-btn {
-      0%, 100% {
-        transform: scale(1);
-        box-shadow: 0 10px 26px rgba(255, 107, 53, 0.24);
-      }
-      50% {
-        transform: scale(1.05);
-        box-shadow: 0 15px 40px rgba(255, 107, 53, 0.4);
-      }
+      animation: pulse 0.6s ease-in-out infinite;
     }
 
     .secondary {
@@ -362,48 +352,8 @@
       animation: shake 0.5s;
     }
 
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-      20%, 40%, 60%, 80% { transform: translateX(5px); }
-    }
-
     .win-pulse {
-      animation: win-pulse 1s ease-out;
-    }
-
-    @keyframes win-pulse {
-      0% {
-        transform: scale(1);
-        color: var(--green);
-      }
-      50% {
-        transform: scale(1.15);
-      }
-      100% {
-        transform: scale(1);
-        color: var(--green);
-      }
-    }
-
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateX(-20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
-    }
-
-    @keyframes fadeOut {
-      from {
-        opacity: 1;
-      }
-      to {
-        opacity: 0;
-      }
+      animation: winPulse 1s ease-out;
     }
 
     @media (min-width: 760px) {
