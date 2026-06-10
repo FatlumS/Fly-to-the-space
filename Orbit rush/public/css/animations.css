@@ -1,0 +1,537 @@
+/**
+ * Orbit Rush - Animations and Polish
+ * Keyframe animations and utility classes for visual effects
+ */
+
+/* ============================================
+   KEYFRAME ANIMATIONS
+   ============================================ */
+
+/**
+ * Pulse Animation
+ * Used on cashout button during flight phase
+ * Scales element from 1 to 1.05 and back smoothly
+ */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/**
+ * Shake Animation
+ * Used when crash happens - creates screen shake effect
+ * Translates element left and right rapidly
+ */
+@keyframes shake {
+  0% {
+    transform: translateX(0);
+  }
+  10% {
+    transform: translateX(-10px);
+  }
+  20% {
+    transform: translateX(10px);
+  }
+  30% {
+    transform: translateX(-10px);
+  }
+  40% {
+    transform: translateX(10px);
+  }
+  50% {
+    transform: translateX(-10px);
+  }
+  60% {
+    transform: translateX(10px);
+  }
+  70% {
+    transform: translateX(-10px);
+  }
+  80% {
+    transform: translateX(10px);
+  }
+  90% {
+    transform: translateX(-10px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/**
+ * Slide Up Animation
+ * Used for notifications and feed items
+ * Slides element up from bottom while fading in
+ */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/**
+ * Slide In Animation
+ * Used for social feed items
+ * Slides element in from left while fading in
+ */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/**
+ * Glow Animation
+ * Used on multiplier text during flight
+ * Creates pulsing text shadow effect
+ */
+@keyframes glow {
+  0% {
+    text-shadow: 0 0 5px #00ff88, 0 0 10px #00ff88;
+  }
+  50% {
+    text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88, 0 0 30px #00ff88;
+  }
+  100% {
+    text-shadow: 0 0 5px #00ff88, 0 0 10px #00ff88;
+  }
+}
+
+/**
+ * Count In Animation
+ * Used for animated number counting
+ * Scales from 0.5 to 1 with bounce effect
+ */
+@keyframes countIn {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/**
+ * Cashout Flash Animation
+ * Used when player successfully cashes out
+ * Flashes background green briefly
+ */
+@keyframes cashoutFlash {
+  0% {
+    background-color: rgba(61, 255, 154, 0);
+  }
+  50% {
+    background-color: rgba(61, 255, 154, 0.3);
+  }
+  100% {
+    background-color: rgba(61, 255, 154, 0);
+  }
+}
+
+/**
+ * Bounce In Animation
+ * Used for important notifications
+ * Bounces element in with scale and opacity
+ */
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/**
+ * Fade Out Animation
+ * Used for particle effects and temporary elements
+ * Fades element out and removes from view
+ */
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/**
+ * Spin Animation
+ * Used for loading states
+ * Rotates element 360 degrees continuously
+ */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/**
+ * Float Animation
+ * Used for subtle floating effects
+ * Gently moves element up and down
+ */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/**
+ * Color Shift Animation
+ * Used for status indicators
+ * Cycles through multiple colors
+ */
+@keyframes colorShift {
+  0% {
+    color: #00d4ff;
+  }
+  25% {
+    color: #ff6b35;
+  }
+  50% {
+    color: #3dff9a;
+  }
+  75% {
+    color: #ff426d;
+  }
+  100% {
+    color: #00d4ff;
+  }
+}
+
+/**
+ * Win Pulse Animation
+ * Used when player wins
+ * Combines scale and color effects
+ */
+@keyframes winPulse {
+  0% {
+    transform: scale(1);
+    color: #3dff9a;
+  }
+  50% {
+    transform: scale(1.15);
+    color: #00ffff;
+  }
+  100% {
+    transform: scale(1);
+    color: #3dff9a;
+  }
+}
+
+/**
+ * Crash Shake Animation
+ * Used on crash event
+ * More aggressive shake than regular shake
+ */
+@keyframes crashShake {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  10% {
+    transform: translate(-15px, -15px) rotate(-2deg);
+  }
+  20% {
+    transform: translate(15px, 15px) rotate(2deg);
+  }
+  30% {
+    transform: translate(-15px, 15px) rotate(-2deg);
+  }
+  40% {
+    transform: translate(15px, -15px) rotate(2deg);
+  }
+  50% {
+    transform: translate(-10px, -10px) rotate(-1deg);
+  }
+  60% {
+    transform: translate(10px, 10px) rotate(1deg);
+  }
+  70% {
+    transform: translate(-5px, 5px) rotate(-0.5deg);
+  }
+  80% {
+    transform: translate(5px, -5px) rotate(0.5deg);
+  }
+  90% {
+    transform: translate(-2px, -2px) rotate(0deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+/**
+ * Pulsing - Continuous pulse effect
+ * Applied to cashout button during flight
+ */
+.pulsing {
+  animation: pulse 0.6s ease-in-out infinite;
+}
+
+/**
+ * Shaking - Screen shake effect
+ * Applied when crash occurs
+ */
+.shaking {
+  animation: shake 0.3s ease-in-out;
+}
+
+/**
+ * Glowing - Text glow effect
+ * Applied to multiplier text during flight
+ */
+.glowing {
+  animation: glow 1.2s ease-in-out infinite alternate;
+}
+
+/**
+ * Sliding Up - Upward slide animation
+ * Applied to notifications and popups
+ */
+.sliding-up {
+  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/**
+ * Sliding In - Horizontal slide animation
+ * Applied to feed items and list elements
+ */
+.sliding-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+/**
+ * Bouncing In - Bounce entry effect
+ * Applied to important notifications
+ */
+.bouncing-in {
+  animation: bounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/**
+ * Fading Out - Fade out effect
+ * Applied to temporary elements
+ */
+.fading-out {
+  animation: fadeOut 0.5s ease-out forwards;
+}
+
+/**
+ * Spinning - Rotation animation
+ * Applied to loading indicators
+ */
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+/**
+ * Floating - Subtle float effect
+ * Applied to idle elements
+ */
+.floating {
+  animation: float 3s ease-in-out infinite;
+}
+
+/**
+ * Color Shifting - Dynamic color change
+ * Applied to status indicators
+ */
+.color-shifting {
+  animation: colorShift 4s ease-in-out infinite;
+}
+
+/**
+ * Win Pulse - Victory effect
+ * Applied when player wins
+ */
+.win-pulse {
+  animation: winPulse 1s ease-out;
+}
+
+/**
+ * Crash Shake - Aggressive crash effect
+ * Applied during crash event
+ */
+.crash-shake {
+  animation: crashShake 0.6s ease-in-out;
+}
+
+/**
+ * Cashout Flash - Win flash effect
+ * Applied when player cashes out successfully
+ */
+.cashout-flash {
+  animation: cashoutFlash 0.8s ease-in-out;
+}
+
+/* ============================================
+   TEXT STYLING UTILITIES
+   ============================================ */
+
+/**
+ * Crash Text - Red text for crash messages
+ */
+.crash-text {
+  color: #ff426d;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(255, 66, 109, 0.5);
+}
+
+/**
+ * Win Text - Green text for win messages
+ */
+.win-text {
+  color: #3dff9a;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(61, 255, 154, 0.5);
+}
+
+/**
+ * Caution Text - Orange text for warnings
+ */
+.caution-text {
+  color: #ff6b35;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(255, 107, 53, 0.5);
+}
+
+/**
+ * Alert Text - Bright text for alerts
+ */
+.alert-text {
+  color: #00d4ff;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+/* ============================================
+   ANIMATION MODIFIERS
+   ============================================ */
+
+/**
+ * Slow - Reduce animation speed
+ */
+.animate-slow {
+  animation-duration: 2s !important;
+}
+
+/**
+ * Fast - Increase animation speed
+ */
+.animate-fast {
+  animation-duration: 0.3s !important;
+}
+
+/**
+ * Delay - Add delay to animation start
+ */
+.animate-delay {
+  animation-delay: 0.2s !important;
+}
+
+/**
+ * Infinite - Loop animation infinitely
+ */
+.animate-infinite {
+  animation-iteration-count: infinite !important;
+}
+
+/**
+ * Paused - Pause animation
+ */
+.animate-paused {
+  animation-play-state: paused !important;
+}
+
+/* ============================================
+   TRANSITIONS
+   ============================================ */
+
+/**
+ * Smooth transition for property changes
+ */
+.transition-smooth {
+  transition: all 0.3s ease;
+}
+
+/**
+ * Quick transition
+ */
+.transition-quick {
+  transition: all 0.1s ease;
+}
+
+/**
+ * Slow transition
+ */
+.transition-slow {
+  transition: all 0.6s ease;
+}
+
+/* ============================================
+   EFFECT COMBINATIONS
+   ============================================ */
+
+/**
+ * Combine multiple effects for dramatic impact
+ */
+.effect-dramatic {
+  animation: pulse 0.5s ease-in-out, glow 1.2s ease-in-out infinite alternate;
+}
+
+/**
+ * Combine effects for win state
+ */
+.effect-win {
+  animation: winPulse 1s ease-out, cashoutFlash 0.8s ease-in-out;
+}
+
+/**
+ * Combine effects for crash state
+ */
+.effect-crash {
+  animation: crashShake 0.6s ease-in-out;
+}
