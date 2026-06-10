@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orbit Rush</title>
+  <style>
+    :root {
+      --bg: #0a0a2e;
+      --panel: #12123d;
+      --panel-2: #18184a;
+      --blue: #00d4ff;
+      --orange: #ff6b35;
+      --green: #3dff9a;
+      --red: #ff426d;
+      --text: #f4f7ff;
+      --muted: #9aa7d9;
+      --line: rgba(0, 212, 255, 0.22);
+      --shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 10%, rgba(0, 212, 255, 0.16), transparent 28%),
+        radial-gradient(circle at 85% 20%, rgba(255, 107, 53, 0.14), transparent 26%),
+        var(--bg);
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      min-height: 44px;
+      border: 0;
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    button:active {
+      transform: translateY(1px) scale(0.99);
+    }
+
+    .app {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      margin: 0 auto;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 12px;
+      padding: 12px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(18, 18, 61, 0.88);
+      box-shadow: var(--shadow);
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      color: var(--blue);
+      font-size: 1.15rem;
+      letter-spacing: 0;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .balance {
+      min-width: 132px;
+      padding: 9px 10px;
+      border: 1px solid rgba(61, 255, 154, 0.35);
+      border-radius: 8px;
+      color: var(--green);
+      background: rgba(61, 255, 154, 0.08);
+      font-weight: 800;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .game-card,
+    .feed,
+    .history,
+    .bet-panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(18, 18, 61, 0.9);
+      box-shadow: var(--shadow);
+    }
+
+    .game-card {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 360px;
+    }
+
+    .game-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px;
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    .phase-pill {
+      min-height: 28px;
+      padding: 5px 9px;
+      border: 1px solid rgba(255, 107, 53, 0.42);
+      border-radius: 999px;
+      color: var(--orange);
+      background: rgba(255, 107, 53, 0.1);
+      font-weight: 800;
+    }
+
+    .game-stage {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 300px;
+    }
+
+    #spaceCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .multiplier-wrap {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .multiplier {
+      color: var(--blue);
+      font-size: clamp(4rem, 22vw, 6.6rem);
+      font-weight: 900;
+      line-height: 0.95;
+      text-shadow: 0 0 24px rgba(0, 212, 255, 0.62);
+    }
+
+    .flight-copy {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .side-stack {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    details.history {
+      overflow: hidden;
+    }
+
+    details.history summary {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      color: var(--blue);
+      cursor: pointer;
+      font-weight: 800;
+      list-style: none;
+    }
+
+    details.history summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .history-list,
+    .feed-list {
+      display: grid;
+      gap: 8px;
+      max-height: 190px;
+      margin: 0;
+      padding: 0 12px 12px;
+      overflow-y: auto;
+      list-style: none;
+    }
+
+    .history-list li,
+    .feed-list li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 36px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.045);
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .history-list strong {
+      color: var(--orange);
+    }
+
+    .feed {
+      padding: 12px;
+    }
+
+    .feed h2 {
+      margin: 0 0 10px;
+      color: var(--blue);
+      font-size: 0.95rem;
+    }
+
+    .feed-list {
+      max-height: 148px;
+      padding: 0;
+    }
+
+    .feed-list strong {
+      color: var(--text);
+    }
+
+    .bet-panel {
+      display: grid;
+      gap: 12px;
+      padding: 12px;
+    }
+
+    .inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    input {
+      min-height: 48px;
+      width: 100%;
+      border: 1px solid rgba(0, 212, 255, 0.28);
+      border-radius: 8px;
+      padding: 0 12px;
+      color: var(--text);
+      background: rgba(5, 8, 34, 0.86);
+      outline: none;
+      transition: border 160ms ease, box-shadow 160ms ease;
+    }
+
+    input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.15);
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .primary {
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--blue), #0077ff);
+      box-shadow: 0 10px 26px rgba(0, 212, 255, 0.24);
+      font-weight: 900;
+    }
+
+    .primary.cashout {
+      background: linear-gradient(135deg, var(--orange), #ffb000);
+      box-shadow: 0 10px 26px rgba(255, 107, 53, 0.24);
+    }
+
+    .secondary {
+      border: 1px solid rgba(255, 107, 53, 0.45);
+      border-radius: 8px;
+      color: var(--orange);
+      background: rgba(255, 107, 53, 0.08);
+      font-weight: 900;
+    }
+
+    .secondary[hidden] {
+      display: none;
+    }
+
+    @media (min-width: 760px) {
+      .app {
+        max-width: 800px;
+        grid-template-rows: auto 1fr;
+      }
+
+      .layout {
+        grid-template-columns: minmax(0, 1fr) 260px;
+        align-items: start;
+      }
+
+      .game-card {
+        min-height: 460px;
+      }
+
+      .game-stage {
+        min-height: 390px;
+      }
+
+      details.history {
+        display: block;
+      }
+
+      details.history summary {
+        cursor: default;
+      }
+
+      .history-list {
+        max-height: 260px;
+      }
+
+      .feed-list {
+        max-height: 210px;
+      }
+
+      .bet-panel {
+        grid-column: 1 / -1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <h1>ORBIT RUSH</h1>
+        <div class="status" id="gameStatus">Next round starting in 5...</div>
+      </div>
+      <div class="balance" id="balanceDisplay">Balance: 1,000.00</div>
+    </header>
+
+    <main class="layout">
+      <section class="game-card" aria-label="Game area">
+        <div class="game-meta">
+          <span id="roundLabel">Round pending</span>
+          <span class="phase-pill" id="phaseLabel">BETTING</span>
+        </div>
+        <div class="game-stage">
+          <canvas id="spaceCanvas" width="720" height="520" aria-label="Spaceship animation"></canvas>
+          <div class="multiplier-wrap">
+            <div class="multiplier" id="multiplierDisplay">1.00x</div>
+            <div class="flight-copy" id="flightCopy">Hold tight for launch</div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side-stack">
+        <details class="history" open>
+          <summary>
+            <span>Round History</span>
+            <span>20</span>
+          </summary>
+          <ol class="history-list" id="historyList">
+            <li><span>Waiting for results</span><strong>--</strong></li>
+          </ol>
+        </details>
+
+        <section class="feed" aria-label="Live player feed">
+          <h2>Live Feed</h2>
+          <ul class="feed-list" id="playerFeed">
+            <li><strong>System</strong><span>Ready for launch</span></li>
+          </ul>
+        </section>
+      </aside>
+
+      <section class="bet-panel" aria-label="Bet controls">
+        <div class="inputs">
+          <label>
+            Bet Amount
+            <input id="betAmount" type="number" min="1" max="10000" step="1" value="10">
+          </label>
+          <label>
+            Auto Cashout
+            <input id="autoCashout" type="number" min="1.01" max="1000" step="0.01" placeholder="Optional">
+          </label>
+        </div>
+        <div class="actions">
+          <button class="primary" id="placeBetButton" type="button">PLACE BET</button>
+          <button class="secondary" id="cancelBetButton" type="button">CANCEL BET</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('spaceCanvas');
+    const ctx = canvas.getContext('2d');
+    const multiplierDisplay = document.getElementById('multiplierDisplay');
+    const placeBetButton = document.getElementById('placeBetButton');
+    const cancelBetButton = document.getElementById('cancelBetButton');
+    const stars = Array.from({ length: 76 }, () => ({
+      x: Math.random(),
+      y: Math.random(),
+      r: Math.random() * 1.8 + 0.4,
+      s: Math.random() * 0.65 + 0.25
+    }));
+
+    let multiplier = 1;
+    let flying = false;
+
+    function drawShip(x, y) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(-0.25);
+      ctx.fillStyle = '#f4f7ff';
+      ctx.beginPath();
+      ctx.moveTo(34, 0);
+      ctx.lineTo(-20, -16);
+      ctx.lineTo(-10, 0);
+      ctx.lineTo(-20, 16);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#00d4ff';
+      ctx.beginPath();
+      ctx.arc(2, 0, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ff6b35';
+      ctx.beginPath();
+      ctx.moveTo(-20, -9);
+      ctx.lineTo(-48 - Math.random() * 12, 0);
+      ctx.lineTo(-20, 9);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function render() {
+      const width = canvas.width;
+      const height = canvas.height;
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = '#080826';
+      ctx.fillRect(0, 0, width, height);
+
+      stars.forEach((star) => {
+        star.x -= flying ? star.s * 0.003 : star.s * 0.0007;
+        if (star.x < 0) star.x = 1;
+        ctx.fillStyle = `rgba(244, 247, 255, ${0.35 + star.s * 0.45})`;
+        ctx.beginPath();
+        ctx.arc(star.x * width, star.y * height, star.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      const shipX = width * 0.24 + Math.min(multiplier - 1, 4) * 42;
+      const shipY = height * 0.64 - Math.min(multiplier - 1, 5) * 34 + Math.sin(Date.now() / 220) * 6;
+      drawShip(shipX, shipY);
+      requestAnimationFrame(render);
+    }
+
+    placeBetButton.addEventListener('click', () => {
+      flying = !flying;
+      placeBetButton.textContent = flying ? 'CASH OUT' : 'PLACE BET';
+      placeBetButton.classList.toggle('cashout', flying);
+      cancelBetButton.hidden = flying;
+    });
+
+    setInterval(() => {
+      if (!flying) return;
+      multiplier = Math.min(multiplier * 1.01, 999.99);
+      multiplierDisplay.textContent = `${multiplier.toFixed(2)}x`;
+    }, 140);
+
+    render();
+  </script>
+</body>
+</html>

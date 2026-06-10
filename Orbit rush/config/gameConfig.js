@@ -1,0 +1,13 @@
+﻿const gameConfig = {
+  ROUND_DURATION: 5,
+  FLIGHT_TRANSITION: 1,
+  CRASH_PAUSE: 3,
+  MIN_BET: 1,
+  MAX_BET: 10000,
+  TARGET_RTP: 0.96,
+  AUTO_CASHOUT_MIN: 1.01,
+  AUTO_CASHOUT_MAX: 1000,
+  MAX_PLAYERS_PER_ROUND: 1000
+};
+
+module.exports = gameConfig;

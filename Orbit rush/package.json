@@ -1,0 +1,25 @@
+﻿{
+  "name": "orbit-rush",
+  "version": "1.0.0",
+  "description": "A real-time crash game server for Orbit Rush.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "crash-game",
+    "socket.io",
+    "express",
+    "redis"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "latest",
+    "dotenv": "latest",
+    "express": "latest",
+    "ioredis": "latest",
+    "socket.io": "latest"
+  }
+}
