@@ -4,7 +4,10 @@
  */
 
 class OrbitRushClient {
-  constructor() {
+  constructor(renderer) {
+    // Store renderer instance
+    this.renderer = renderer;
+
     // Initialize DOM element references
     this.balanceDisplay = document.getElementById('balance-display');
     this.betAmountInput = document.getElementById('bet-amount');
@@ -28,6 +31,14 @@ class OrbitRushClient {
       currentRoundId: null
     };
 
+    // Game state for rendering
+    this.currentMultiplier = 1.00;
+    this.gameState = {
+      isCrashed: false,
+      crashPoint: null,
+      isFlying: false
+    };
+
     // Socket.io instance
     this.socket = null;
 
@@ -36,6 +47,7 @@ class OrbitRushClient {
     this.multiplierAnimation = null;
     this.feedItems = [];
     this.maxFeedItems = 20;
+    this.animationFrameId = null;
   }
 
   /**
@@ -55,7 +67,33 @@ class OrbitRushClient {
     // Display initial balance
     this.updateBalanceDisplay(this.state.balance);
 
+    // Start render loop
+    this.startRenderLoop();
+
     console.log('OrbitRushClient initialized');
+  }
+
+  /**
+   * Start the animation render loop
+   */
+  startRenderLoop() {
+    const loop = () => {
+      if (this.renderer) {
+        this.renderer.render(this.currentMultiplier, this.gameState);
+      }
+      this.animationFrameId = requestAnimationFrame(loop);
+    };
+    loop();
+  }
+
+  /**
+   * Stop the animation render loop
+   */
+  stopRenderLoop() {
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
   }
 
   /**
@@ -65,12 +103,22 @@ class OrbitRushClient {
     // ROUND_STARTING: Show countdown and enable betting
     this.socket.on('ROUND_STARTING', (data) => {
       this.resetForNewRound();
+      
+      // Reset multiplier and game state
+      this.currentMultiplier = 1.00;
+      this.gameState.isCrashed = false;
+      this.gameState.isFlying = false;
+      this.gameState.crashPoint = null;
+      
+      // Reset renderer
+      this.renderer.reset();
+      
       this.gameStatusMessage.textContent = 'Place your bets!';
       this.gameStatusMessage.classList.remove('crashed');
       this.gameStatusMessage.classList.add('betting');
       this.placeBetButton.disabled = false;
       this.placeBetButton.textContent = 'Place Bet';
-      this.placeBetButton.classList.remove('cashout-mode');
+      this.placeBetButton.classList.remove('cashout-mode', 'pulse');
 
       // Start countdown
       this.startCountdown(data.countdownTime || 10);
@@ -79,6 +127,11 @@ class OrbitRushClient {
     // GAME_FLYING: Spaceship is flying, disable bets, show cash out button
     this.socket.on('GAME_FLYING', (data) => {
       this.state.currentRoundId = data.roundId;
+      this.gameState.isFlying = true;
+      
+      // Reset renderer for new flight
+      this.renderer.reset();
+      
       this.gameStatusMessage.textContent = '🚀 FLYING...';
       this.gameStatusMessage.classList.remove('betting', 'crashed');
       this.gameStatusMessage.classList.add('flying');
@@ -94,17 +147,24 @@ class OrbitRushClient {
 
     // MULTIPLIER_UPDATE: Update display and animate spaceship
     this.socket.on('MULTIPLIER_UPDATE', (data) => {
+      this.currentMultiplier = data.multiplier;
       this.multiplierDisplay.textContent = `${data.multiplier.toFixed(2)}x`;
-      this.updateSpaceship(data.multiplier);
+      
+      // Renderer will draw everything in the render loop
     });
 
     // GAME_CRASHED: Show crash animation and results
     this.socket.on('GAME_CRASHED', (data) => {
+      this.gameState.isCrashed = true;
+      this.gameState.crashPoint = data.crashPoint;
+      this.currentMultiplier = data.crashPoint;
+      
       this.gameStatusMessage.textContent = `CRASHED at ${data.crashPoint.toFixed(2)}x!`;
       this.gameStatusMessage.classList.remove('flying', 'betting');
       this.gameStatusMessage.classList.add('crashed');
       
-      this.playShakeAnimation();
+      // Trigger crash animation in renderer
+      this.renderer.crashAnimation();
       
       this.placeBetButton.textContent = 'Place Bet';
       this.placeBetButton.classList.remove('cashout-mode', 'pulse');
@@ -112,10 +172,11 @@ class OrbitRushClient {
       
       this.state.hasCashedOut = false;
       
-      // Reset multiplier display after a moment
+      // Reset renderer after crash animation
       setTimeout(() => {
+        this.currentMultiplier = 1.00;
         this.multiplierDisplay.textContent = '1.00x';
-        this.resetSpaceship();
+        this.renderer.reset();
       }, 1500);
     });
 
@@ -270,89 +331,22 @@ class OrbitRushClient {
   }
 
   /**
-   * Update spaceship position based on multiplier
-   */
-  updateSpaceship(multiplier) {
-    const spaceship = this.spaceshipContainer.querySelector('.spaceship');
-    if (!spaceship) return;
-
-    // Move spaceship upward based on multiplier
-    // Scale: each 0.1x increase moves it up by some pixels
-    const maxHeight = 80; // Maximum percentage of container height
-    const heightPercent = Math.min(multiplier * 10, maxHeight);
-    
-    spaceship.style.transform = `translateY(-${heightPercent}%)`;
-    
-    // Add trail effect
-    this.addSpaceshipTrail();
-  }
-
-  /**
-   * Add spaceship trail effect
-   */
-  addSpaceshipTrail() {
-    const spaceship = this.spaceshipContainer.querySelector('.spaceship');
-    if (!spaceship) return;
-
-    const trail = document.createElement('div');
-    trail.className = 'spaceship-trail';
-    trail.textContent = '✨';
-    trail.style.position = 'absolute';
-    trail.style.left = spaceship.style.left;
-    trail.style.top = spaceship.style.top;
-    trail.style.opacity = '0.7';
-    trail.style.animation = 'fadeOut 0.5s ease-out forwards';
-    
-    this.spaceshipContainer.appendChild(trail);
-
-    // Clean up trail after animation
-    setTimeout(() => trail.remove(), 500);
-  }
-
-  /**
-   * Reset spaceship to starting position
-   */
-  resetSpaceship() {
-    const spaceship = this.spaceshipContainer.querySelector('.spaceship');
-    if (!spaceship) return;
-
-    spaceship.style.transform = 'translateY(0)';
-  }
-
-  /**
-   * Play shake animation
-   */
-  playShakeAnimation() {
-    this.gameContainer.classList.add('shake');
-    setTimeout(() => {
-      this.gameContainer.classList.remove('shake');
-    }, 500);
-  }
-
-  /**
-   * Play win animation
-   */
-  playWinAnimation() {
-    this.balanceDisplay.classList.add('win-pulse');
-    setTimeout(() => {
-      this.balanceDisplay.classList.remove('win-pulse');
-    }, 1000);
-  }
-
-  /**
    * Add message to social feed
    */
   addToFeed(message, type) {
-    const feedItem = document.createElement('div');
+    const feedItem = document.createElement('li');
     feedItem.className = `feed-item feed-${type}`;
-    feedItem.textContent = message;
     feedItem.style.animation = 'slideIn 0.3s ease-out';
 
-    // Color code based on type
+    // Create message structure
     if (type === 'bet') {
-      feedItem.style.borderLeft = '4px solid #3b82f6'; // blue
+      feedItem.innerHTML = `<strong>Player</strong><span>${message}</span>`;
+      feedItem.style.borderLeft = '4px solid #3b82f6';
     } else if (type === 'cashout') {
-      feedItem.style.borderLeft = '4px solid #10b981'; // green
+      feedItem.innerHTML = `<strong>Win</strong><span>${message}</span>`;
+      feedItem.style.borderLeft = '4px solid #10b981';
+    } else {
+      feedItem.textContent = message;
     }
 
     this.socialFeed.insertBefore(feedItem, this.socialFeed.firstChild);
@@ -420,18 +414,25 @@ class OrbitRushClient {
   }
 
   /**
+   * Play win animation
+   */
+  playWinAnimation() {
+    this.balanceDisplay.classList.add('win-pulse');
+    setTimeout(() => {
+      this.balanceDisplay.classList.remove('win-pulse');
+    }, 1000);
+  }
+
+  /**
    * Populate history sidebar with round data
    */
   populateHistory(history) {
     this.historyContainer.innerHTML = '';
 
     history.slice(0, 10).forEach((round) => {
-      const historyItem = document.createElement('div');
-      historyItem.className = 'history-item';
-      historyItem.innerHTML = `
-        <div class="history-multiplier">${round.crashPoint.toFixed(2)}x</div>
-        <div class="history-time">${new Date(round.timestamp).toLocaleTimeString()}</div>
-      `;
+      const historyItem = document.createElement('li');
+      const time = new Date(round.timestamp).toLocaleTimeString();
+      historyItem.innerHTML = `<span>${time}</span><strong>${round.crashPoint.toFixed(2)}x</strong>`;
       this.historyContainer.appendChild(historyItem);
     });
   }
@@ -456,14 +457,12 @@ class OrbitRushClient {
     this.placeBetButton.classList.remove('cashout-mode', 'pulse');
 
     this.multiplierDisplay.textContent = '1.00x';
-    this.resetSpaceship();
     this.gameStatusMessage.textContent = 'Waiting for next round...';
     this.gameStatusMessage.classList.remove('flying', 'crashed', 'betting', 'error');
   }
 }
 
-// Initialize the client when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-  const gameClient = new OrbitRushClient();
-  gameClient.init();
-});
+// Export for use in other modules
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = OrbitRushClient;
+}
